@@ -1,7 +1,7 @@
 id=careful_optimization
 name=Careful Unified Optimizer
-version=v5.0
-versionCode=9
+version=v5.1
+versionCode=10
 author=Codex
-description=Grounded MTK battery and smoothness tuning for Dimensity 7050. Uses thermal-aware PPM soft limits, targeted repair actions, and keeps reels smooth without fake governor fights.
+description=Grounded MTK battery and smoothness tuning for Dimensity 7050. Uses thermal-aware PPM soft limits, targeted repair actions, and keeps reels smooth without fake governor fights. Auto-recovers from thermal_guard with hysteresis.
 updateJson=
