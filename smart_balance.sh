@@ -1,26 +1,14 @@
 #!/system/bin/sh
-# Careful Unified Optimizer v4.0 - live balance profile
+# Careful Unified Optimizer v5.0 - live balance profile
 
 LOG_TAG="CarefulSmartBalance"
+MODDIR="${0%/*}"
+
+[ -f "$MODDIR/tools/common.sh" ] && . "$MODDIR/tools/common.sh"
 
 write_if_exists() {
     [ -e "$1" ] || return 0
     echo "$2" >"$1" 2>/dev/null
-}
-
-apply_governor_balance() {
-    if [ -d /sys/devices/system/cpu/cpufreq/sugov_ext ]; then
-        write_if_exists /sys/devices/system/cpu/cpufreq/sugov_ext/up_rate_limit_us 300
-        write_if_exists /sys/devices/system/cpu/cpufreq/sugov_ext/down_rate_limit_us 15000
-    fi
-
-    for gov in /sys/devices/system/cpu/cpufreq/policy*/schedutil \
-               /sys/devices/system/cpu/cpu*/cpufreq/schedutil; do
-        [ -d "$gov" ] || continue
-        write_if_exists "$gov/up_rate_limit_us" 300
-        write_if_exists "$gov/down_rate_limit_us" 15000
-        write_if_exists "$gov/iowait_boost_enabled" 1
-    done
 }
 
 apply_memory_balance() {
@@ -38,35 +26,84 @@ apply_memory_balance() {
     write_if_exists /proc/sys/vm/page-cluster 0
 }
 
+apply_runtime_props() {
+    for prop in \
+        persist.sys.composition.type \
+        persist.sys.force_highend_gfx \
+        persist.sys.use_dithering \
+        persist.sys.ui.hw \
+        persist.sys.powermode; do
+        resetprop -p -d "$prop" 2>/dev/null
+    done
+
+    for prop in \
+        cached_apps_freezer \
+        persist.sys.cached_apps_freezer \
+        debug.sf.vsync_reinject_ignore \
+        logcat.live \
+        wifi.supplicant_scan_interval \
+        pm.sleep_mode; do
+        resetprop -d "$prop" 2>/dev/null
+    done
+
+    resetprop persist.sys.smart_ram_management 1 2>/dev/null
+    resetprop -p persist.vendor.mtk.perf_turbo 1 2>/dev/null
+    resetprop -p persist.vendor.mtk.fpsgo.enable 1 2>/dev/null
+    resetprop -p persist.vendor.mtk.fpsgo.v2.enable 1 2>/dev/null
+    resetprop -p persist.vendor.mtk.fpsgo.v3.enable 1 2>/dev/null
+    resetprop -p debug.sf.latch_unsignaled 1 2>/dev/null
+    resetprop -p debug.sf.disable_backpressure 1 2>/dev/null
+    resetprop -p persist.sys.boot.logcat 0 2>/dev/null
+    resetprop -p persist.logd.logpersistd 0 2>/dev/null
+}
+
+force_apply=0
+full_apply=0
+case "$1" in
+    screen_off|thermal_guard|normal)
+        target_mode="$1"
+        full_apply=1
+        ;;
+    boot|manual)
+        target_mode="$(detect_power_mode)"
+        force_apply=1
+        full_apply=1
+        ;;
+    auto|"")
+        target_mode="$(detect_power_mode)"
+        ;;
+    *)
+        target_mode="normal"
+        force_apply=1
+        ;;
+esac
+
 if [ "$(getprop sys.boot_completed)" != "1" ]; then
     until [ "$(getprop sys.boot_completed)" = "1" ]; do
         sleep 2
     done
 fi
 
-apply_memory_balance
-apply_governor_balance
+if [ "$full_apply" = "1" ]; then
+    apply_memory_balance
+    apply_runtime_props
+fi
 
-for prop in \
-    persist.sys.composition.type \
-    persist.sys.force_highend_gfx \
-    persist.sys.use_dithering \
-    persist.sys.ui.hw \
-    persist.sys.powermode; do
-    resetprop -p -d "$prop" 2>/dev/null
-done
+current_mode="$(read_power_mode)"
+if [ "$force_apply" = "1" ] || [ "$current_mode" != "$target_mode" ]; then
+    case "$target_mode" in
+        screen_off)
+            apply_battery_guard
+            ;;
+        thermal_guard)
+            apply_thermal_guard
+            ;;
+        *)
+            restore_normal_limits
+            target_mode="normal"
+            ;;
+    esac
+fi
 
-for prop in \
-    debug.sf.vsync_reinject_ignore \
-    logcat.live \
-    wifi.supplicant_scan_interval \
-    pm.sleep_mode; do
-    resetprop -d "$prop" 2>/dev/null
-done
-
-resetprop persist.sys.smart_ram_management 1 2>/dev/null
-resetprop cached_apps_freezer disabled 2>/dev/null
-resetprop persist.sys.cached_apps_freezer disabled 2>/dev/null
-resetprop -p persist.sys.boot.logcat 0 2>/dev/null
-
-log -t "$LOG_TAG" "v4 live balance applied"
+refresh_thermal_cache
+log -t "$LOG_TAG" "v5 mode=$target_mode cpu=${CAREFUL_CPU_TEMP:-0} shell=${CAREFUL_SHELL_TEMP:-0} battery=${CAREFUL_BATTERY_TEMP:-0}"

@@ -1,11 +1,9 @@
-# Careful Unified Optimizer v4.0
-# Device-aware balanced battery and smoothness profile
+# Careful Unified Optimizer v5.0
+# Grounded MTK battery and smoothness profile
 
-# Keep frozen apps from stuttering short-video apps after resume.
+# Keep RAM management sane without relying on placebo props.
 persist.sys.smart_ram_management=1
 ro.config.fha_enabled=true
-cached_apps_freezer=disabled
-persist.sys.cached_apps_freezer=disabled
 
 # Keep MediaTek dynamic frame and touch boosts available.
 persist.vendor.mtk.perf_turbo=1

@@ -3,25 +3,19 @@
 # vendor-managed Wi-Fi stack on wlan0.
 
 LOG_TAG="CarefulUnifiedOpt"
+TOOLSDIR="${0%/*}"
+MODDIR="${TOOLSDIR%/*}"
 
-printf "Before:\n"
-ps -A -o PID,PPID,USER,NAME,ARGS 2>/dev/null | grep wpa_supplicant | grep -v grep
+[ -f "$MODDIR/tools/common.sh" ] && . "$MODDIR/tools/common.sh"
 
-for proc in /proc/[0-9]*; do
-    [ -r "$proc/cmdline" ] || continue
-    pid="${proc#/proc/}"
-    cmdline="$(tr '\000' ' ' <"$proc/cmdline" 2>/dev/null)"
+if [ "${QUIET:-0}" != "1" ]; then
+    printf "Before:\n"
+    list_wpa_supplicant
+fi
 
-    case "$cmdline" in
-        *"/vendor/bin/hw/wpa_supplicant"*) continue ;;
-        *"wpa_supplicant"*"/data/data/com.termux/files/usr/tmp/"*)
-            log -t "$LOG_TAG" "Manual cleanup killed rogue wpa_supplicant pid=$pid"
-            kill "$pid" 2>/dev/null
-            sleep 1
-            kill -9 "$pid" 2>/dev/null
-            ;;
-    esac
-done
+cleanup_rogue_wpa_supplicant
 
-printf "\nAfter:\n"
-ps -A -o PID,PPID,USER,NAME,ARGS 2>/dev/null | grep wpa_supplicant | grep -v grep
+if [ "${QUIET:-0}" != "1" ]; then
+    printf "\nAfter:\n"
+    list_wpa_supplicant
+fi

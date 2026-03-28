@@ -1,8 +1,8 @@
 #!/system/bin/sh
-# Manual live apply helper for Careful Unified Optimizer v4.0
+# Manual live apply helper for Careful Unified Optimizer v5.0
 
 LOG_TAG="CarefulUnifiedOpt"
-MODDIR="/data/adb/modules/careful_optimization"
+MODDIR="${0%/*}"
 
 apply_live_props_and_mounts() {
     for mod_path in /data/adb/modules/*; do
@@ -24,7 +24,7 @@ apply_live_props_and_mounts() {
     done
 }
 
-[ -f "$MODDIR/smart_balance.sh" ] && sh "$MODDIR/smart_balance.sh"
+[ -f "$MODDIR/smart_balance.sh" ] && sh "$MODDIR/smart_balance.sh" manual
 apply_live_props_and_mounts
 
 log -t "$LOG_TAG" "Manual live apply completed"

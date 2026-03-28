@@ -1,8 +1,10 @@
 #!/system/bin/sh
-# Careful Unified Optimizer v4.0 - late boot tuning
+# Careful Unified Optimizer v5.0 - late boot tuning
 
 LOG_TAG="CarefulUnifiedOpt"
-MODDIR="/data/adb/modules/careful_optimization"
+MODDIR="${0%/*}"
+
+[ -f "$MODDIR/tools/common.sh" ] && . "$MODDIR/tools/common.sh"
 
 write_if_exists() {
     [ -e "$1" ] || return 0
@@ -40,35 +42,12 @@ apply_storage_tuning() {
     done
 }
 
-cleanup_rogue_wpa_supplicant() {
-    # Keep the vendor-managed supplicant. Kill only rogue Termux-launched
-    # supplicant processes that fight over wlan0 and have been linked to the
-    # observed tombstones.
-    [ "$(getprop persist.careful.allow_termux_wpa)" = "1" ] && return 0
-
-    for proc in /proc/[0-9]*; do
-        [ -r "$proc/cmdline" ] || continue
-        pid="${proc#/proc/}"
-        cmdline="$(tr '\000' ' ' <"$proc/cmdline" 2>/dev/null)"
-
-        case "$cmdline" in
-            *"/vendor/bin/hw/wpa_supplicant"*) continue ;;
-            *"wpa_supplicant"*"/data/data/com.termux/files/usr/tmp/"*)
-                log -t "$LOG_TAG" "Killing rogue wpa_supplicant pid=$pid"
-                kill "$pid" 2>/dev/null
-                sleep 1
-                kill -9 "$pid" 2>/dev/null
-                ;;
-        esac
-    done
-}
-
 until [ "$(getprop sys.boot_completed)" = "1" ]; do
     sleep 5
 done
 
 cleanup_rogue_wpa_supplicant
-[ -f "$MODDIR/smart_balance.sh" ] && sh "$MODDIR/smart_balance.sh"
+[ -f "$MODDIR/smart_balance.sh" ] && sh "$MODDIR/smart_balance.sh" boot
 
 # Trade a bit less writeback churn for lower background battery cost.
 write_if_exists /proc/sys/vm/dirty_writeback_centisecs 1500
@@ -78,7 +57,7 @@ apply_storage_tuning
 # Let late vendor services settle, then apply our balanced profile once more.
 sleep 45
 cleanup_rogue_wpa_supplicant
-[ -f "$MODDIR/smart_balance.sh" ] && sh "$MODDIR/smart_balance.sh"
+[ -f "$MODDIR/smart_balance.sh" ] && sh "$MODDIR/smart_balance.sh" boot
 write_if_exists /proc/sys/vm/dirty_writeback_centisecs 1500
 write_if_exists /proc/sys/vm/dirty_expire_centisecs 3000
 apply_storage_tuning
@@ -107,8 +86,9 @@ fi
     while true; do
         sleep 180
         cleanup_rogue_wpa_supplicant
+        [ -f "$MODDIR/smart_balance.sh" ] && sh "$MODDIR/smart_balance.sh" auto
     done
 ) &
 
-log -t "$LOG_TAG" "v4 late boot tuning applied"
+log -t "$LOG_TAG" "v5 late boot tuning applied"
 exit 0
