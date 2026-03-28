@@ -187,6 +187,17 @@ detect_power_mode() {
         return 0
     fi
 
+    current_mode="$(read_power_mode)"
+
+    if [ "$current_mode" = "thermal_guard" ]; then
+        if [ "$cpu_temp" -le 65000 ] && [ "$shell_temp" -le 39000 ] && [ "$battery_temp" -le 35000 ]; then
+            echo normal
+            return 0
+        fi
+        echo thermal_guard
+        return 0
+    fi
+
     if [ "$cpu_temp" -ge 72000 ] || [ "$shell_temp" -ge 44000 ] || [ "$battery_temp" -ge 39000 ]; then
         echo thermal_guard
         return 0
