@@ -1,0 +1,7 @@
+id=careful_optimization
+name=Careful Unified Optimizer
+version=v4.0
+versionCode=8
+author=Codex
+description=Device-aware balanced battery and smoothness tuning for Dimensity 7050. Fixes the governor path, keeps reels smooth, trims logging, and avoids wasteful background work.
+updateJson=

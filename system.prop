@@ -1,0 +1,38 @@
+# Careful Unified Optimizer v4.0
+# Device-aware balanced battery and smoothness profile
+
+# Keep frozen apps from stuttering short-video apps after resume.
+persist.sys.smart_ram_management=1
+ro.config.fha_enabled=true
+cached_apps_freezer=disabled
+persist.sys.cached_apps_freezer=disabled
+
+# Keep MediaTek dynamic frame and touch boosts available.
+persist.vendor.mtk.perf_turbo=1
+persist.vendor.mtk.fpsgo.enable=1
+persist.vendor.mtk.fpsgo.v2.enable=1
+persist.vendor.mtk.fpsgo.v3.enable=1
+
+# SurfaceFlinger tuning that can help scroll and video smoothness without
+# forcing fake high-end flags or obsolete composition modes.
+debug.sf.latch_unsignaled=1
+debug.sf.disable_backpressure=1
+ro.surface_flinger.max_frame_buffer_acquired_buffers=3
+
+# Reasonable ART defaults for an 8 GB device.
+dalvik.vm.dex2oat-filter=speed-profile
+dalvik.vm.image-dex2oat-filter=speed-profile
+dalvik.vm.dex2oat-threads=4
+dalvik.vm.heapgrowthlimit=384m
+dalvik.vm.heapsize=512m
+dalvik.vm.heaptargetutilization=0.72
+
+# Network responsiveness.
+net.ipv4.tcp_fastopen=3
+net.ipv4.tcp_congestion_control=bbr
+
+# Keep logs lean to reduce background overhead.
+persist.logd.logpersistd=0
+persist.sys.boot.logcat=0
+logd.log_size=64K
+persist.logd.size=64K
