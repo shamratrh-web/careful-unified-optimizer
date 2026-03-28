@@ -19,9 +19,19 @@ Useful commands
 - `su -c sh /data/adb/modules/careful_optimization/smart_balance.sh`
 - `su -c sh /data/adb/modules/careful_optimization/apply_now.sh`
 - `su -c setprop persist.careful.live_module_watch 1`
+- `su -c sh /data/adb/modules/careful_optimization/tools/collect_health_snapshot.sh`
+- `su -c sh /data/adb/modules/careful_optimization/tools/reels_ab_proof.sh prep`
+- `su -c sh /data/adb/modules/careful_optimization/tools/reels_ab_proof.sh report`
+- `su -c sh /data/adb/modules/careful_optimization/tools/fix_wpa_supplicant.sh`
 
 Notes
 - The live module watcher is now opt-in for battery reasons.
 - This module does not blanket-whitelist Instagram, Facebook, or YouTube from
   Doze because that would hurt standby battery more than it helps foreground
   smoothness.
+- The `tools/` scripts are there to produce evidence before changing tuning
+  again. They are more useful than stacking extra placebo props.
+- The module now kills rogue Termux-launched `wpa_supplicant` instances by
+  default because they can conflict with the vendor Wi-Fi service on `wlan0`.
+- If you intentionally need those Termux Wi-Fi workflows later, set
+  `persist.careful.allow_termux_wpa=1`.
