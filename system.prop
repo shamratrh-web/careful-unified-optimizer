@@ -1,75 +1,47 @@
-# Careful Unified Optimizer v6.0 ThermalGuard Pro
+# Careful Unified Optimizer v6.1 ThermalGuard Pro
 # Advanced MTK Dimensity 7050 (MT6877) optimization for Android 15
 
+# ===== ANDROID 15 FREEZER & RAM MANAGEMENT =====
+# Crucial for battery life on Android 15.
+cached_apps_freezer=enabled
+persist.sys.cached_apps_freezer=enabled
+persist.sys.smart_ram_management=1
+ro.config.fha_enabled=true
+
 # ===== ANDROID 15 DISPLAY & SURFACEFLINGER OPTIMIZATIONS =====
-# Enable HWC 3.0 composition for better power efficiency
 debug.sf.enable_hwc3=1
-
-# Android 15 Canvas optimization - reduces GPU workload
 debug.sf.latch_unsignaled=1
-debug.sf.disable_backpressure=0
+debug.sf.disable_backpressure=1
 debug.sf.use_content_detection_for_refresh_rate=1
-
-# SurfaceFlinger buffer optimization for smooth scrolling
 ro.surface_flinger.max_frame_buffer_acquired_buffers=3
-ro.surface_flinger.use_content_detection_for_refresh_rate=1
-
-# VSYNC optimization for reduced input lag
-ro.surface_flinger.vsync_period_override=16666667
 debug.sf.vsync_reinject_ignore=1
 
 # ===== MEDIATEK FRAMEWORK OPTIMIZATIONS =====
-# Enable MediaTek dynamic performance tuning (native, not forced)
 persist.vendor.mtk.perf_turbo=1
 persist.vendor.mtk.fpsgo.enable=1
 persist.vendor.mtk.fpsgo.v2.enable=1
 persist.vendor.mtk.fpsgo.v3.enable=1
-
-# Smart touch boost - only during actual touch interaction
 debug.vendor.perf.smart_touch=1
-debug.vendor.perf.smart_touch.move=1
-debug.vendor.perf.smart_touch.trace=1
 
 # ===== ART VM OPTIMIZATIONS FOR ANDROID 15 =====
-# Speed-profile for balanced performance and battery
 dalvik.vm.dex2oat-filter=speed-profile
 dalvik.vm.image-dex2oat-filter=speed-profile
 dalvik.vm.dex2oat-threads=4
-dalvik.vm.image-dex2oat-threads=4
-
-# Optimized heap settings for 8GB RAM devices
 dalvik.vm.heapgrowthlimit=384m
 dalvik.vm.heapsize=512m
 dalvik.vm.heaptargetutilization=0.75
-dalvik.vm.heapminfree=8m
-dalvik.vm.heapmaxfree=32m
-
-# Enable concurrent garbage collection (Android 15 feature)
 dalvik.vm.useconcurrentgc=true
 
-# ===== MEMORY & LRU GEN OPTIMIZATIONS =====
-# Smart RAM management without aggressive killing
-persist.sys.smart_ram_management=1
-
-# Enable FHA (Frame Handling Acceleration) for MediaTek
-ro.config.fha_enabled=true
-
 # ===== NETWORK OPTIMIZATIONS =====
-# TCP BBR for better network efficiency
 net.ipv4.tcp_congestion_control=bbr
 net.ipv4.tcp_fastopen=3
 
 # ===== LOG OPTIMIZATIONS =====
-# Minimal logging to reduce background I/O
 persist.logd.logpersistd=0
 persist.sys.boot.logcat=0
 logd.log_size=64K
 persist.logd.size=64K
 
 # ===== THERMAL-AWARE SCHEDULING =====
-# Enable thermal-aware task placement
 persist.sys.thermal.scheduling=1
-
-# ===== BATTERY HEALTH (ANDROID 15) =====
-# Signal to system that we want battery protection
 persist.sys.battery.health.optimization=1
