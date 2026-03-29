@@ -1,14 +1,29 @@
-# Careful Unified Optimizer v6.1 ThermalGuard Pro
-# Advanced MTK Dimensity 7050 (MT6877) optimization for Android 15
+# Careful Unified Optimizer v6.2 Gaming Pro
+# High-performance MTK Dimensity 7050 (MT6877) optimization for Android 15
+
+# ===== GAMING PERFORMANCE & SCHEDULER =====
+# Minimize scheduler latency for top-app
+sys.use_fifo_ui=1
+persist.sys.use_fifo_ui=1
+
+# MediaTek specific gaming boosts
+persist.vendor.mtk.perf_turbo=1
+persist.vendor.mtk.fpsgo.enable=1
+persist.vendor.mtk.fpsgo.v2.enable=1
+persist.vendor.mtk.fpsgo.v3.enable=1
+persist.vendor.mtk.powerhal_boost=1
+persist.vendor.mtk.game_mode=1
+
+# Disable DUMP during gaming
+persist.sys.gpu.dc_debug_enable=0
 
 # ===== ANDROID 15 FREEZER & RAM MANAGEMENT =====
-# Crucial for battery life on Android 15.
 cached_apps_freezer=enabled
 persist.sys.cached_apps_freezer=enabled
 persist.sys.smart_ram_management=1
 ro.config.fha_enabled=true
 
-# ===== ANDROID 15 DISPLAY & SURFACEFLINGER OPTIMIZATIONS =====
+# ===== ANDROID 15 DISPLAY & SURFACEFLINGER =====
 debug.sf.enable_hwc3=1
 debug.sf.latch_unsignaled=1
 debug.sf.disable_backpressure=1
@@ -16,20 +31,11 @@ debug.sf.use_content_detection_for_refresh_rate=1
 ro.surface_flinger.max_frame_buffer_acquired_buffers=3
 debug.sf.vsync_reinject_ignore=1
 
-# ===== MEDIATEK FRAMEWORK OPTIMIZATIONS =====
-persist.vendor.mtk.perf_turbo=1
-persist.vendor.mtk.fpsgo.enable=1
-persist.vendor.mtk.fpsgo.v2.enable=1
-persist.vendor.mtk.fpsgo.v3.enable=1
-debug.vendor.perf.smart_touch=1
-
-# ===== ART VM OPTIMIZATIONS FOR ANDROID 15 =====
+# ===== ART VM OPTIMIZATIONS =====
 dalvik.vm.dex2oat-filter=speed-profile
 dalvik.vm.image-dex2oat-filter=speed-profile
-dalvik.vm.dex2oat-threads=4
-dalvik.vm.heapgrowthlimit=384m
-dalvik.vm.heapsize=512m
-dalvik.vm.heaptargetutilization=0.75
+dalvik.vm.dex2oat-threads=6
+dalvik.vm.image-dex2oat-threads=6
 dalvik.vm.useconcurrentgc=true
 
 # ===== NETWORK OPTIMIZATIONS =====
@@ -41,7 +47,3 @@ persist.logd.logpersistd=0
 persist.sys.boot.logcat=0
 logd.log_size=64K
 persist.logd.size=64K
-
-# ===== THERMAL-AWARE SCHEDULING =====
-persist.sys.thermal.scheduling=1
-persist.sys.battery.health.optimization=1

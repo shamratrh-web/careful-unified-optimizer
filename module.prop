@@ -1,7 +1,7 @@
 id=careful_optimization
-name=Careful Unified Optimizer v6.1 ThermalGuard Pro
-version=v6.1
-versionCode=16
+name=Careful Unified Optimizer v6.2 Gaming Pro
+version=v6.2
+versionCode=17
 author=Codex
-description=Optimized MTK tuning for Dimensity 7050 on Android 15. Fixed freezer drain, balanced thermal guards (62C/39C), and PPM-based soft limits for smooth Reels and maximum battery life.
+description=High-performance MTK tuning for Dimensity 7050 on Android 15. Real-time game detection triggers Turbo Mode (PPM Policy 9), fully enables FPSGO, and pins top-apps to Big cores. No lag gaming while maintaining base thermal safety.
 updateJson=
