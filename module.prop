@@ -1,7 +1,7 @@
 id=careful_optimization
-name=Careful Unified Optimizer
-version=v5.1
-versionCode=10
+name=Careful Unified Optimizer v6.0 ThermalGuard Pro
+version=v6.0
+versionCode=15
 author=Codex
-description=Grounded MTK battery and smoothness tuning for Dimensity 7050. Uses thermal-aware PPM soft limits, targeted repair actions, and keeps reels smooth without fake governor fights. Auto-recovers from thermal_guard with hysteresis.
+description=Advanced thermal-aware optimizer for MediaTek Dimensity 7050 (MT6877) on Android 15. Features adaptive CPU/GPU frequency management, Android 15 SurfaceFlinger optimizations, real-time thermal zone monitoring, and battery health preservation. Eliminates heating while maximizing performance and battery life.
 updateJson=
