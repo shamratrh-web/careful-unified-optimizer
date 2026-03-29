@@ -1,7 +1,7 @@
 id=careful_optimization
-name=Careful Unified Optimizer v6.2 Gaming Pro
-version=v6.2
-versionCode=17
+name=Careful Unified Optimizer v6.3 Ultimate Smoothness
+version=v6.3
+versionCode=18
 author=Codex
-description=High-performance MTK tuning for Dimensity 7050 on Android 15. Real-time game detection triggers Turbo Mode (PPM Policy 9), fully enables FPSGO, and pins top-apps to Big cores. No lag gaming while maintaining base thermal safety.
+description=Total Reels & Video smoothness fix for Dimensity 7050. Forces 120Hz refresh rate during scrolling, enables HEVC hardware codec priority, and overrides MTK PowerHAL to prevent stutter. Features Ultimate Gaming Mode (v6.2+) and fixed Android 15 Freezer.
 updateJson=
