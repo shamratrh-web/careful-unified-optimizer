@@ -1,7 +1,7 @@
 id=careful_optimization
-name=Careful Unified Optimizer v6.2 Gaming Pro
-version=v6.2
-versionCode=17
+name=Careful Unified Optimizer v6.4 Micro-Lag Eliminator
+version=v6.4
+versionCode=19
 author=Codex
-description=High-performance MTK tuning for Dimensity 7050 on Android 15. Real-time game detection triggers Turbo Mode (PPM Policy 9), fully enables FPSGO, and pins top-apps to Big cores. No lag gaming while maintaining base thermal safety.
+description=Surgical fix for micro-stutter in FB/Insta Reels. Implements Zero-Latency I/O, GED GPU Bottom-Freq (400MHz), and MTK Smart Boost. Forces instant core ramp-up via Sugov-Ext overrides. Total 120Hz stability for Dimensity 7050.
 updateJson=
