@@ -1,39 +1,41 @@
-# Careful Unified Optimizer v6.4 Micro-Lag Eliminator
-# Surgical Stutter Fix for MTK Dimensity 7050 (MT6877) on Android 15
+# Careful Unified Optimizer v6.5 Balanced ThermalGuard
+# Balanced Android 15 profile for MT6877 / Dimensity 7050
 
-# ===== ZERO-LATENCY INTERFACE =====
-# Force instant CPU ramp up
-persist.sys.sugov.up_rate_limit_us=0
-persist.sys.sugov.down_rate_limit_us=50000
-
-# Force instant GPU ramp up (MediaTek GED)
-persist.vendor.mtk.ged.boost_enable=1
-persist.vendor.mtk.ged.smart_boost=1
-
-# ===== REELS & FB/INSTA STUTTER FIX =====
-# Aggressive media priority
-persist.sys.media.priority=1
-debug.sf.latch_unsignaled=1
-debug.sf.disable_backpressure=1
-ro.surface_flinger.max_frame_buffer_acquired_buffers=4
-
-# Force 120Hz system-wide
-persist.sys.peak_refresh_rate=120.0
-persist.sys.min_refresh_rate=120.0
-
-# ===== I/O LATENCY REDUCTION =====
-# Optimize for small database reads (Reels loading)
-persist.sys.io.latency=1
-persist.sys.io.no_merges=2
-
-# ===== ANDROID 15 FREEZER & RAM =====
+# Android 15 cached app behavior
 cached_apps_freezer=enabled
 persist.sys.cached_apps_freezer=enabled
 persist.sys.smart_ram_management=1
 ro.config.fha_enabled=true
 
-# ===== LOG OPTIMIZATIONS =====
+# Respect vendor composition defaults, keep only lightweight hints
+debug.sf.use_content_detection_for_refresh_rate=1
+
+# MediaTek vendor stack
+persist.vendor.mtk.perf_turbo=1
+persist.vendor.mtk.fpsgo.enable=1
+persist.vendor.mtk.fpsgo.v2.enable=1
+persist.vendor.mtk.fpsgo.v3.enable=1
+debug.vendor.perf.smart_touch=1
+
+# ART / dexopt
+dalvik.vm.dex2oat-filter=speed-profile
+dalvik.vm.image-dex2oat-filter=speed-profile
+dalvik.vm.dex2oat-threads=4
+dalvik.vm.heapgrowthlimit=384m
+dalvik.vm.heapsize=512m
+dalvik.vm.heaptargetutilization=0.75
+dalvik.vm.useconcurrentgc=true
+
+# Network
+net.ipv4.tcp_congestion_control=bbr
+net.ipv4.tcp_fastopen=3
+
+# Logging
 persist.logd.logpersistd=0
 persist.sys.boot.logcat=0
 logd.log_size=64K
 persist.logd.size=64K
+
+# Thermal / battery intent flags
+persist.sys.thermal.scheduling=1
+persist.sys.battery.health.optimization=1

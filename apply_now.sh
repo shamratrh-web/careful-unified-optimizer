@@ -1,30 +1,38 @@
 #!/system/bin/sh
-# Manual live apply helper for Careful Unified Optimizer v5.0
+# Live installer and applier for Careful Unified Optimizer v6.5.
 
-LOG_TAG="CarefulUnifiedOpt"
-MODDIR="${0%/*}"
+SRCMODDIR="${0%/*}"
+LIVEMODDIR="/data/adb/modules/careful_optimization"
+LOG_TAG="CarefulThermalGuard"
 
-apply_live_props_and_mounts() {
-    for mod_path in /data/adb/modules/*; do
-        [ -d "$mod_path" ] || continue
-        [ -f "$mod_path/disable" ] && continue
-        [ -f "$mod_path/remove" ] && continue
+sync_live_module() {
+    mkdir -p "$LIVEMODDIR/tools" 2>/dev/null
 
-        [ -f "$mod_path/system.prop" ] && resetprop -p --file "$mod_path/system.prop"
-
-        find "$mod_path/system" "$mod_path/vendor" -type f 2>/dev/null | while read -r mod_file; do
-            rel="${mod_file#$mod_path/}"
-            target="/$rel"
-            [ -f "$target" ] || target="/system/$rel"
-            if [ -f "$target" ]; then
-                chcon --reference="$target" "$mod_file" 2>/dev/null
-                mount -o bind "$mod_file" "$target" 2>/dev/null
-            fi
-        done
+    for file in action.sh apply_now.sh module.prop post-fs-data.sh service.sh smart_balance.sh system.prop README.md; do
+        [ -f "$SRCMODDIR/$file" ] && cp -af "$SRCMODDIR/$file" "$LIVEMODDIR/$file"
     done
+
+    cp -af "$SRCMODDIR/tools/." "$LIVEMODDIR/tools/"
+
+    chmod 0755 "$LIVEMODDIR"/action.sh \
+        "$LIVEMODDIR"/apply_now.sh \
+        "$LIVEMODDIR"/post-fs-data.sh \
+        "$LIVEMODDIR"/service.sh \
+        "$LIVEMODDIR"/smart_balance.sh \
+        "$LIVEMODDIR"/tools/*.sh 2>/dev/null
 }
 
-[ -f "$MODDIR/smart_balance.sh" ] && sh "$MODDIR/smart_balance.sh" manual
-apply_live_props_and_mounts
+restart_live_service() {
+    pkill -f '/data/adb/modules/careful_optimization/service\.sh' 2>/dev/null || true
+    pkill -f '/data/adb/modules/careful_optimization/smart_balance\.sh' 2>/dev/null || true
+    sleep 1
+    sh "$LIVEMODDIR/post-fs-data.sh" >/dev/null 2>&1
+    sh "$LIVEMODDIR/smart_balance.sh" manual >/dev/null 2>&1
+    sh "$LIVEMODDIR/service.sh" >/dev/null 2>&1 &
+}
 
-log -t "$LOG_TAG" "Manual live apply completed"
+sync_live_module
+restart_live_service
+
+log -t "$LOG_TAG" "v6.5 live install applied from $SRCMODDIR"
+printf '%s\n' "Applied v6.5 live to $LIVEMODDIR"

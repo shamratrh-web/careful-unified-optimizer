@@ -1,57 +1,42 @@
 #!/system/bin/sh
-# Careful Unified Optimizer v6.4 Micro-Lag Eliminator - Live Balance
-# Optimized for MT6877 (Dimensity 7050) on Android 15
+# Careful Unified Optimizer v6.5 Balanced ThermalGuard live balance.
 
-LOG_TAG="CarefulMicroLag"
+LOG_TAG="CarefulThermalGuard"
 MODDIR="${0%/*}"
+
 [ -f "$MODDIR/tools/common.sh" ] && . "$MODDIR/tools/common.sh"
 
-# Standardize logging helper if missing from common.sh
-log_msg() {
-    log -t "$LOG_TAG" "$1"
-}
-
-apply_memory_balance() {
-    write_if_exists /sys/kernel/mm/lru_gen/enabled 7
-    write_if_exists /proc/sys/vm/swappiness 100
-    write_if_exists /proc/sys/vm/vfs_cache_pressure 100
-}
-
-apply_runtime_props() {
-    device_config put activity_manager_native_boot use_freezer true 2>/dev/null
-    resetprop -p persist.sys.media.priority 1 2>/dev/null
-    resetprop -p debug.sf.latch_unsignaled 1 2>/dev/null
-}
-
 target_mode="$1"
+full_apply=0
+
 case "$target_mode" in
     boot|manual)
         target_mode="$(detect_power_mode)"
-        apply_memory_balance
-        apply_runtime_props
+        full_apply=1
         ;;
     auto|"")
         target_mode="$(detect_power_mode)"
         ;;
 esac
 
-current_mode=$(cat "$MODDIR/.power_mode" 2>/dev/null)
+if [ "$full_apply" = "1" ]; then
+    clear_stale_props
+    apply_runtime_props
+    apply_storage_tuning
+fi
 
-if [ "$current_mode" != "$target_mode" ] || [ "$target_mode" = "turbo" ] || [ "$target_mode" = "video_boost" ]; then
+current_mode="$(read_power_mode)"
+if [ "$full_apply" = "1" ] || [ "$current_mode" != "$target_mode" ] || [ "$target_mode" = "video_boost" ]; then
     case "$target_mode" in
-        video_boost)
-            apply_video_boost
-            ;;
-        turbo)
-            apply_turbo_mode
-            ;;
         screen_off)
             apply_battery_guard
             ;;
         thermal_guard)
-            state=$(calculate_thermal_state)
-            apply_thermal_policy "$state"
+            apply_thermal_policy "$(calculate_thermal_state)"
             write_power_mode "thermal_guard"
+            ;;
+        video_boost)
+            apply_video_boost
             ;;
         *)
             restore_normal_limits
@@ -59,5 +44,7 @@ if [ "$current_mode" != "$target_mode" ] || [ "$target_mode" = "turbo" ] || [ "$
     esac
 fi
 
+save_thermal_snapshot
 refresh_thermal_cache
-log_msg "v6.4 mode=$target_mode cpu=${CAREFUL_CPU_TEMP} bat=${CAREFUL_BATTERY_TEMP}"
+log_msg "v6.5 mode=$target_mode cpu=${CAREFUL_CPU_TEMP} shell=${CAREFUL_SHELL_TEMP} battery=${CAREFUL_BATTERY_TEMP}"
+exit 0

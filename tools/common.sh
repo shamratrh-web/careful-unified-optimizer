@@ -1,39 +1,89 @@
 #!/system/bin/sh
-# Shared helpers for Careful Unified Optimizer v6.4 Micro-Lag Eliminator
-# Surgical Micro-Stutter Fix for MT6877 on Android 15
+# Shared helpers for Careful Unified Optimizer v6.5 Balanced ThermalGuard.
 
 MODDIR="${MODDIR:-/data/adb/modules/careful_optimization}"
-LOG_TAG="${LOG_TAG:-CarefulMicroLag}"
+LOG_TAG="${LOG_TAG:-CarefulThermalGuard}"
 STATE_FILE="$MODDIR/.power_mode"
+THERMAL_HISTORY_FILE="$MODDIR/.thermal_history"
 
-# Thermal thresholds - Performance Bias
-THERMAL_NORMAL_MAX=70000      
-THERMAL_ELEVATED_MAX=80000    
-THERMAL_CRITICAL_MAX=90000    
-THERMAL_RECOVERY_TARGET=65000 
+THERMAL_NORMAL_MAX=65000
+THERMAL_ELEVATED_MAX=75000
+THERMAL_CRITICAL_MAX=82000
+THERMAL_RECOVERY_TARGET=60000
+
+BATTERY_WARM_MAX=39000
+BATTERY_ELEVATED_MAX=42000
+BATTERY_CRITICAL_MAX=45000
+BATTERY_RECOVERY_TARGET=37000
 
 write_if_exists() {
     [ -e "$1" ] || return 0
     echo "$2" >"$1" 2>/dev/null
 }
 
-log_fix() {
+delete_prop_if_possible() {
+    resetprop --delete "$1" 2>/dev/null || true
+}
+
+log_msg() {
     log -t "$LOG_TAG" "$1"
+}
+
+log_thermal() {
+    log_msg "$1"
+}
+
+log_fix() {
+    log_msg "$1"
 }
 
 refresh_thermal_cache() {
     CAREFUL_CPU_TEMP=0
+    CAREFUL_SHELL_TEMP=0
     CAREFUL_BATTERY_TEMP=0
+    CAREFUL_GPU_TEMP=0
+
     for zone in /sys/class/thermal/thermal_zone*; do
         [ -r "$zone/type" ] || continue
+        [ -r "$zone/temp" ] || continue
         type="$(cat "$zone/type" 2>/dev/null)"
         temp="$(cat "$zone/temp" 2>/dev/null)"
-        case "$temp" in ''|*[!0-9-]*) continue ;; esac
+        case "$temp" in
+            ''|*[!0-9-]*) continue ;;
+        esac
+        [ "$temp" -lt 0 ] && continue
+        [ "$temp" -gt 150000 ] && continue
+
         case "$type" in
-            mtktscpu|AP_tmp|mtktsAP|cpu-*) [ "$temp" -gt "$CAREFUL_CPU_TEMP" ] && CAREFUL_CPU_TEMP=$temp ;;
-            battery|mtktsbattery) [ "$temp" -gt "$CAREFUL_BATTERY_TEMP" ] && CAREFUL_BATTERY_TEMP=$temp ;;
+            mtktscpu|AP_tmp|mtktsAP|cpu-*)
+                [ "$temp" -gt "$CAREFUL_CPU_TEMP" ] && CAREFUL_CPU_TEMP=$temp
+                ;;
+            shell_*|skin-*|shell_front|shell_frame|shell_back)
+                [ "$temp" -gt "$CAREFUL_SHELL_TEMP" ] && CAREFUL_SHELL_TEMP=$temp
+                ;;
+            battery|mtktsbattery)
+                [ "$temp" -gt "$CAREFUL_BATTERY_TEMP" ] && CAREFUL_BATTERY_TEMP=$temp
+                ;;
+            gpu-*|mali-*)
+                [ "$temp" -gt "$CAREFUL_GPU_TEMP" ] && CAREFUL_GPU_TEMP=$temp
+                ;;
         esac
     done
+}
+
+get_cpu_temp() {
+    refresh_thermal_cache
+    echo "$CAREFUL_CPU_TEMP"
+}
+
+get_shell_temp() {
+    refresh_thermal_cache
+    echo "$CAREFUL_SHELL_TEMP"
+}
+
+get_battery_temp() {
+    refresh_thermal_cache
+    echo "$CAREFUL_BATTERY_TEMP"
 }
 
 screen_is_on() {
@@ -42,91 +92,334 @@ screen_is_on() {
 }
 
 is_heavy_app() {
-    fg_app=$(dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp' | head -1)
+    fg_app="$(dumpsys window windows 2>/dev/null | grep -E 'mCurrentFocus|mFocusedApp' | head -1)"
     case "$fg_app" in
-        *instagram*|*tiktok*|*youtube*|*facebook*|*reels*|*video*|*game*|*unity*|*unreal*) return 0 ;;
+        *instagram*|*facebook*|*youtube*|*reddit*|*tiktok*|*shorts*|*video*|*game*|*unity*|*unreal*)
+            return 0
+            ;;
     esac
     return 1
 }
 
-# Zero-Latency Fixes
-apply_micro_lag_fix() {
-    # 1. MTK GED Boost - Forces GPU to stay awake during UI interactions
-    write_if_exists /sys/module/ged/parameters/ged_boost_enable 1
-    write_if_exists /sys/module/ged/parameters/ged_smart_boost 1
-    write_if_exists /sys/module/ged/parameters/boost_gpu_enable 1
-    write_if_exists /sys/module/ged/parameters/gpu_bottom_freq 400000
-    
-    # 2. I/O Latency - Prevent request merging to reduce wait times for small database reads (FB/Insta)
-    for q in /sys/block/*/queue; do
-        write_if_exists "$q/nomerges" 2
-        write_if_exists "$q/rq_affinity" 2
-        write_if_exists "$q/add_random" 0
-    done
-    
-    # 3. Sugov-Ext Immediate Ramp
-    write_if_exists /sys/devices/system/cpu/cpufreq/sugov_ext/up_rate_limit_us 0
-    write_if_exists /sys/devices/system/cpu/cpufreq/sugov_ext/down_rate_limit_us 50000
-    
-    # 4. SurfaceFlinger content detection
-    settings put system peak_refresh_rate 120.0 2>/dev/null
-    service call SurfaceFlinger 1035 i32 1 2>/dev/null
-}
-
-apply_video_boost() {
-    log_fix "ELIMINATING LAG: Video/Reels prioritized."
-    apply_micro_lag_fix
-    
-    # PPM System Boost
-    if [ -w /proc/ppm/policy_status ]; then echo "9 1" > /proc/ppm/policy_status 2>/dev/null; fi
-    
-    # Clear CPU limits
-    if [ -w /proc/ppm/policy/userlimit_max_cpu_freq ]; then
-        echo "0 -1" > /proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
-        echo "1 -1" > /proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
-    fi
-    
-    # Performance core pinning
-    write_if_exists /dev/cpuset/top-app/cpus 0-7
-    write_power_mode "video_boost"
-}
-
-apply_thermal_policy() {
-    local state="$1"
-    case "$state" in
-        critical)
-            if [ -w /proc/ppm/policy/userlimit_max_cpu_freq ]; then
-                echo "0 1053000" > /proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
-                echo "1 1300000" > /proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
-            fi
-            log_fix "CRITICAL: Throttle"
-            ;;
-        *)
-            if [ -w /proc/ppm/policy/userlimit_max_cpu_freq ]; then
-                echo "0 -1" > /proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
-                echo "1 -1" > /proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
-            fi
-            log_fix "NORMAL: Full performance"
-            ;;
-    esac
-}
-
-restore_normal_limits() {
-    apply_micro_lag_fix
-    if [ -w /proc/ppm/policy_status ]; then echo "9 0" > /proc/ppm/policy_status 2>/dev/null; fi
-    apply_thermal_policy "normal"
-    write_power_mode "normal"
-}
-
-detect_power_mode() {
-    if ! screen_is_on; then echo "screen_off"; return 0; fi
-    refresh_thermal_cache
-    if [ "$CAREFUL_CPU_TEMP" -ge "$THERMAL_CRITICAL_MAX" ]; then echo "thermal_guard"; return 0; fi
-    if is_heavy_app; then echo "video_boost"; return 0; fi
-    echo "normal"
+read_power_mode() {
+    cat "$STATE_FILE" 2>/dev/null || echo "normal"
 }
 
 write_power_mode() {
     mkdir -p "$MODDIR" 2>/dev/null
     printf '%s\n' "$1" >"$STATE_FILE" 2>/dev/null
+}
+
+append_thermal_history() {
+    mkdir -p "$MODDIR" 2>/dev/null
+    refresh_thermal_cache
+    printf '%s mode=%s cpu=%s shell=%s battery=%s gpu=%s\n' \
+        "$(date +%s)" \
+        "$(read_power_mode)" \
+        "$CAREFUL_CPU_TEMP" \
+        "$CAREFUL_SHELL_TEMP" \
+        "$CAREFUL_BATTERY_TEMP" \
+        "$CAREFUL_GPU_TEMP" >>"$THERMAL_HISTORY_FILE" 2>/dev/null
+
+    if [ -f "$THERMAL_HISTORY_FILE" ]; then
+        tail -n 120 "$THERMAL_HISTORY_FILE" >"$THERMAL_HISTORY_FILE.tmp" 2>/dev/null
+        mv -f "$THERMAL_HISTORY_FILE.tmp" "$THERMAL_HISTORY_FILE" 2>/dev/null
+    fi
+}
+
+save_thermal_snapshot() {
+    append_thermal_history
+}
+
+clear_cpu_limits() {
+    if [ -w /proc/ppm/policy/userlimit_max_cpu_freq ]; then
+        echo "0 -1" >/proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
+        echo "1 -1" >/proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
+    fi
+}
+
+set_cpu_limit() {
+    local cluster="$1"
+    local max_khz="$2"
+    if [ -w /proc/ppm/policy/userlimit_max_cpu_freq ]; then
+        echo "$cluster $max_khz" >/proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
+    fi
+}
+
+set_system_boost() {
+    local enabled="$1"
+    if [ -w /proc/ppm/policy_status ]; then
+        echo "9 $enabled" >/proc/ppm/policy_status 2>/dev/null
+    fi
+}
+
+set_schedutil_response() {
+    local profile="$1"
+    local up=200
+    local down=15000
+
+    case "$profile" in
+        boost)
+            up=50
+            down=10000
+            ;;
+        battery)
+            up=1200
+            down=50000
+            ;;
+        thermal)
+            up=400
+            down=25000
+            ;;
+        balanced|*)
+            up=200
+            down=15000
+            ;;
+    esac
+
+    for gov in /sys/devices/system/cpu/cpufreq/sugov_ext /sys/devices/system/cpu/cpu*/cpufreq/schedutil; do
+        [ -d "$gov" ] || continue
+        write_if_exists "$gov/up_rate_limit_us" "$up"
+        write_if_exists "$gov/down_rate_limit_us" "$down"
+        if [ -f "$gov/iowait_boost_enabled" ]; then
+            write_if_exists "$gov/iowait_boost_enabled" 1
+        fi
+    done
+}
+
+enable_mglru() {
+    if [ -f /sys/kernel/mm/lru_gen/enabled ]; then
+        current="$(cat /sys/kernel/mm/lru_gen/enabled 2>/dev/null)"
+        case "$current" in
+            *7*|*0x0007*) ;;
+            *) echo 7 >/sys/kernel/mm/lru_gen/enabled 2>/dev/null ;;
+        esac
+    fi
+}
+
+apply_memory_balance() {
+    local profile="${1:-balanced}"
+    local swappiness=72
+    local cache_pressure=90
+    local dirty_ratio=16
+    local dirty_background=4
+    local dirty_writeback=1500
+    local dirty_expire=3000
+    local page_cluster=0
+    local compaction=20
+    local watermark=16
+
+    case "$profile" in
+        boost)
+            swappiness=68
+            cache_pressure=85
+            dirty_ratio=14
+            dirty_background=4
+            dirty_writeback=1200
+            compaction=18
+            watermark=14
+            ;;
+        battery)
+            swappiness=90
+            cache_pressure=110
+            dirty_ratio=10
+            dirty_background=3
+            dirty_writeback=2000
+            compaction=30
+            watermark=20
+            ;;
+        thermal)
+            swappiness=80
+            cache_pressure=100
+            dirty_ratio=12
+            dirty_background=4
+            dirty_writeback=1500
+            compaction=25
+            watermark=18
+            ;;
+    esac
+
+    enable_mglru
+    write_if_exists /proc/sys/vm/swappiness "$swappiness"
+    write_if_exists /proc/sys/vm/vfs_cache_pressure "$cache_pressure"
+    write_if_exists /proc/sys/vm/dirty_ratio "$dirty_ratio"
+    write_if_exists /proc/sys/vm/dirty_background_ratio "$dirty_background"
+    write_if_exists /proc/sys/vm/dirty_writeback_centisecs "$dirty_writeback"
+    write_if_exists /proc/sys/vm/dirty_expire_centisecs "$dirty_expire"
+    write_if_exists /proc/sys/vm/page-cluster "$page_cluster"
+    write_if_exists /proc/sys/vm/compaction_proactiveness "$compaction"
+    write_if_exists /proc/sys/vm/watermark_scale_factor "$watermark"
+}
+
+apply_storage_tuning() {
+    for queue in /sys/block/dm-*/queue /sys/block/mmcblk*/queue /sys/block/sd*/queue /sys/block/sda/queue /sys/block/sdb/queue; do
+        [ -d "$queue" ] || continue
+        if [ -f "$queue/scheduler" ]; then
+            sched="$(cat "$queue/scheduler" 2>/dev/null)"
+            case "$sched" in
+                *mq-deadline*) echo mq-deadline >"$queue/scheduler" 2>/dev/null ;;
+                *none*) ;;
+            esac
+        fi
+        write_if_exists "$queue/read_ahead_kb" 128
+        write_if_exists "$queue/rq_affinity" 1
+    done
+}
+
+apply_runtime_props() {
+    device_config put activity_manager_native_boot use_freezer true 2>/dev/null
+    resetprop -p persist.vendor.mtk.perf_turbo 1 2>/dev/null
+    resetprop -p persist.vendor.mtk.fpsgo.enable 1 2>/dev/null
+    resetprop -p persist.vendor.mtk.fpsgo.v2.enable 1 2>/dev/null
+    resetprop -p persist.vendor.mtk.fpsgo.v3.enable 1 2>/dev/null
+    resetprop -p debug.vendor.perf.smart_touch 1 2>/dev/null
+    resetprop -p persist.sys.boot.logcat 0 2>/dev/null
+    resetprop -p logd.log_size 64K 2>/dev/null
+    resetprop -p persist.logd.size 64K 2>/dev/null
+}
+
+clear_stale_props() {
+    for prop in \
+        persist.sys.sugov.up_rate_limit_us \
+        persist.sys.sugov.down_rate_limit_us \
+        persist.sys.media.priority \
+        persist.sys.io.latency \
+        persist.sys.io.no_merges \
+        persist.sys.min_refresh_rate \
+        persist.sys.peak_refresh_rate \
+        persist.sys.composition.type \
+        persist.sys.force_highend_gfx \
+        persist.vendor.mtk.ged.smart_boost \
+        persist.vendor.mtk.ged.boost_enable
+    do
+        delete_prop_if_possible "$prop"
+    done
+
+    resetprop -n debug.sf.disable_backpressure 0 2>/dev/null
+    resetprop -n debug.sf.latch_unsignaled 0 2>/dev/null
+}
+
+apply_video_boost() {
+    clear_cpu_limits
+    set_system_boost 1
+    set_schedutil_response boost
+    apply_memory_balance boost
+    write_power_mode "video_boost"
+}
+
+apply_battery_guard() {
+    set_system_boost 0
+    set_cpu_limit 0 1200000
+    set_cpu_limit 1 1400000
+    set_schedutil_response battery
+    apply_memory_balance battery
+    write_power_mode "screen_off"
+}
+
+apply_thermal_policy() {
+    local state="$1"
+    set_system_boost 0
+    case "$state" in
+        critical)
+            set_cpu_limit 0 1400000
+            set_cpu_limit 1 1700000
+            set_schedutil_response thermal
+            apply_memory_balance thermal
+            log_thermal "critical thermal throttling applied"
+            ;;
+        elevated)
+            set_cpu_limit 0 1600000
+            set_cpu_limit 1 2000000
+            set_schedutil_response thermal
+            apply_memory_balance thermal
+            log_thermal "elevated thermal throttling applied"
+            ;;
+        warm)
+            set_cpu_limit 0 1800000
+            set_cpu_limit 1 2200000
+            set_schedutil_response balanced
+            apply_memory_balance balanced
+            log_thermal "warm thermal soft cap applied"
+            ;;
+        normal|*)
+            clear_cpu_limits
+            set_schedutil_response balanced
+            apply_memory_balance balanced
+            log_thermal "restored normal thermal limits"
+            ;;
+    esac
+}
+
+restore_normal_limits() {
+    clear_cpu_limits
+    set_system_boost 0
+    set_schedutil_response balanced
+    apply_memory_balance balanced
+    write_power_mode "normal"
+}
+
+calculate_thermal_state() {
+    refresh_thermal_cache
+    if [ "$CAREFUL_CPU_TEMP" -ge "$THERMAL_CRITICAL_MAX" ] || [ "$CAREFUL_BATTERY_TEMP" -ge "$BATTERY_CRITICAL_MAX" ]; then
+        echo "critical"
+    elif [ "$CAREFUL_CPU_TEMP" -ge "$THERMAL_ELEVATED_MAX" ] || [ "$CAREFUL_BATTERY_TEMP" -ge "$BATTERY_ELEVATED_MAX" ]; then
+        echo "elevated"
+    elif [ "$CAREFUL_CPU_TEMP" -ge "$THERMAL_NORMAL_MAX" ] || [ "$CAREFUL_BATTERY_TEMP" -ge "$BATTERY_WARM_MAX" ]; then
+        echo "warm"
+    else
+        echo "normal"
+    fi
+}
+
+detect_power_mode() {
+    if ! screen_is_on; then
+        echo "screen_off"
+        return 0
+    fi
+
+    state="$(calculate_thermal_state)"
+    current="$(read_power_mode)"
+
+    if [ "$current" = "thermal_guard" ]; then
+        if [ "$CAREFUL_CPU_TEMP" -le "$THERMAL_RECOVERY_TARGET" ] && [ "$CAREFUL_BATTERY_TEMP" -le "$BATTERY_RECOVERY_TARGET" ]; then
+            echo "normal"
+        else
+            echo "thermal_guard"
+        fi
+        return 0
+    fi
+
+    case "$state" in
+        critical|elevated)
+            echo "thermal_guard"
+            ;;
+        *)
+            if is_heavy_app && [ "$CAREFUL_CPU_TEMP" -lt "$THERMAL_ELEVATED_MAX" ] && [ "$CAREFUL_BATTERY_TEMP" -lt "$BATTERY_ELEVATED_MAX" ]; then
+                echo "video_boost"
+            else
+                echo "normal"
+            fi
+            ;;
+    esac
+}
+
+choose_monitor_interval() {
+    if ! screen_is_on; then
+        echo 120
+    elif is_heavy_app; then
+        echo 30
+    else
+        echo 45
+    fi
+}
+
+list_wpa_supplicant() {
+    ps -A -o USER,PID,NAME,ARGS 2>/dev/null | grep '[w]pa_supplicant' || true
+}
+
+cleanup_rogue_wpa_supplicant() {
+    [ "$(getprop persist.careful.allow_termux_wpa)" = "1" ] && return 0
+    ps -A -o USER,PID,NAME,ARGS 2>/dev/null | awk '/wpa_supplicant/ && $1 ~ /^u0_a/ {print $2}' | while read -r pid; do
+        [ -n "$pid" ] && kill "$pid" 2>/dev/null
+    done
 }

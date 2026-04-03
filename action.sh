@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Magisk action entrypoint for Careful Unified Optimizer v5.0
+# Magisk action entrypoint for Careful Unified Optimizer v6.5
 
 MODDIR="${0%/*}"
 

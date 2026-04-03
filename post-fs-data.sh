@@ -1,20 +1,19 @@
 #!/system/bin/sh
-# Careful Unified Optimizer v6.0 ThermalGuard Pro - Early Boot
-# Minimal early-boot initialization
+# Careful Unified Optimizer v6.5 Balanced ThermalGuard early boot tuning.
 
 MODDIR="${0%/*}"
 LOG_TAG="CarefulThermalGuard"
 
-# Source common utilities
 [ -f "$MODDIR/tools/common.sh" ] && . "$MODDIR/tools/common.sh"
 
-# Apply system properties early
 if [ -f "$MODDIR/system.prop" ]; then
     resetprop -p --file "$MODDIR/system.prop" 2>/dev/null
 fi
 
-# Minimal early initialization
-# Full thermal management starts in service.sh after boot
+clear_stale_props
+enable_mglru
+apply_memory_balance balanced
+set_schedutil_response balanced
 
-log -t "$LOG_TAG" "v6.0 early boot initialized"
+log -t "$LOG_TAG" "v6.5 early boot tuning applied"
 exit 0

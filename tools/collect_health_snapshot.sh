@@ -24,7 +24,7 @@ write_section "Module"
 append_cmd "sed -n '1,20p' /data/adb/modules/careful_optimization/module.prop"
 
 write_section "Runtime Props"
-append_cmd "resetprop | grep -E 'fpsgo|perf_turbo|smart_ram_management|boot.logcat|debug\\.sf.disable_backpressure|debug\\.sf.latch_unsignaled|force_highend_gfx|composition.type|powermode|logcat.live'"
+append_cmd "resetprop | grep -E 'fpsgo|perf_turbo|smart_ram_management|boot.logcat|cached_apps_freezer|thermal\\.scheduling|battery\\.health\\.optimization|debug\\.sf.use_content_detection_for_refresh_rate'"
 append_cmd "dumpsys activity settings | sed -n '/CachedAppOptimizer settings/,+8p'"
 
 write_section "Tunables"
