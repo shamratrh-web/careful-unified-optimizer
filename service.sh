@@ -22,7 +22,7 @@ fi
 
 (
     sleep 35
-    for pkg in com.instagram.android com.facebook.katana com.facebook.orca; do
+    for pkg in com.google.android.youtube com.instagram.android com.facebook.katana com.facebook.orca; do
         if pm list packages | grep -q "^package:$pkg$"; then
             cmd package compile -m speed-profile "$pkg" >/dev/null 2>&1
         fi
