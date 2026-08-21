@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Live installer and applier for Careful Unified Optimizer v6.5.
+# Live installer and applier for Careful Unified Optimizer v6.6.
 
 SRCMODDIR="${0%/*}"
 LIVEMODDIR="/data/adb/modules/careful_optimization"
@@ -34,5 +34,5 @@ restart_live_service() {
 sync_live_module
 restart_live_service
 
-log -t "$LOG_TAG" "v6.5 live install applied from $SRCMODDIR"
-printf '%s\n' "Applied v6.5 live to $LIVEMODDIR"
+log -t "$LOG_TAG" "v6.6 live install applied from $SRCMODDIR"
+printf '%s\n' "Applied v6.6 live to $LIVEMODDIR"

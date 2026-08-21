@@ -1,4 +1,4 @@
-# Careful Unified Optimizer v6.5 Balanced ThermalGuard
+# Careful Unified Optimizer v6.6 Smoothness & ThermalGuard
 # Balanced Android 15 profile for MT6877 / Dimensity 7050
 
 # Android 15 cached app behavior
@@ -7,8 +7,8 @@ persist.sys.cached_apps_freezer=enabled
 persist.sys.smart_ram_management=1
 ro.config.fha_enabled=true
 
-# Respect vendor composition defaults, keep only lightweight hints
-debug.sf.use_content_detection_for_refresh_rate=1
+# Keep display refresh rate smooth without aggressive content downclocking
+debug.sf.use_content_detection_for_refresh_rate=0
 
 # MediaTek vendor stack
 persist.vendor.mtk.perf_turbo=1
@@ -16,6 +16,7 @@ persist.vendor.mtk.fpsgo.enable=1
 persist.vendor.mtk.fpsgo.v2.enable=1
 persist.vendor.mtk.fpsgo.v3.enable=1
 debug.vendor.perf.smart_touch=1
+vendor.boostfwk.frame.decision=2
 
 # ART / dexopt
 dalvik.vm.dex2oat-filter=speed-profile

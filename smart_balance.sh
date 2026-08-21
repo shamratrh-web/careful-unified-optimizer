@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Careful Unified Optimizer v6.5 Balanced ThermalGuard live balance.
+# Careful Unified Optimizer v6.6 Balanced ThermalGuard live balance.
 
 LOG_TAG="CarefulThermalGuard"
 MODDIR="${0%/*}"
@@ -23,6 +23,7 @@ if [ "$full_apply" = "1" ]; then
     clear_stale_props
     apply_runtime_props
     apply_storage_tuning
+    apply_display_tuning
 fi
 
 current_mode="$(read_power_mode)"
@@ -37,14 +38,16 @@ if [ "$full_apply" = "1" ] || [ "$current_mode" != "$target_mode" ] || [ "$targe
             ;;
         video_boost)
             apply_video_boost
+            apply_display_tuning
             ;;
         *)
             restore_normal_limits
+            apply_display_tuning
             ;;
     esac
 fi
 
 save_thermal_snapshot
 refresh_thermal_cache
-log_msg "v6.5 mode=$target_mode cpu=${CAREFUL_CPU_TEMP} shell=${CAREFUL_SHELL_TEMP} battery=${CAREFUL_BATTERY_TEMP}"
+log_msg "v6.6 mode=$target_mode cpu=${CAREFUL_CPU_TEMP} shell=${CAREFUL_SHELL_TEMP} battery=${CAREFUL_BATTERY_TEMP}"
 exit 0

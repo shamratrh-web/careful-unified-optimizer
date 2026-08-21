@@ -14,6 +14,7 @@ clear_stale_props
 enable_mglru
 apply_memory_balance balanced
 set_schedutil_response balanced
+apply_display_tuning
 
-log -t "$LOG_TAG" "v6.5 early boot tuning applied"
+log -t "$LOG_TAG" "v6.6 early boot tuning applied"
 exit 0

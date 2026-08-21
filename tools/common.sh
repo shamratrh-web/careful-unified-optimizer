@@ -153,26 +153,34 @@ set_system_boost() {
     fi
 }
 
+apply_display_tuning() {
+    settings put secure oplus_customize_screen_refresh_rate 2 2>/dev/null
+    settings put system min_refresh_rate 120.0 2>/dev/null
+    settings put system peak_refresh_rate 120.0 2>/dev/null
+    settings put system user_refresh_rate 120 2>/dev/null
+    settings put global customized_refresh_rate 120 2>/dev/null
+}
+
 set_schedutil_response() {
     local profile="$1"
-    local up=200
+    local up=80
     local down=15000
 
     case "$profile" in
         boost)
             up=50
-            down=10000
+            down=20000
             ;;
         battery)
-            up=1200
-            down=50000
+            up=800
+            down=40000
             ;;
         thermal)
-            up=400
+            up=300
             down=25000
             ;;
         balanced|*)
-            up=200
+            up=80
             down=15000
             ;;
     esac
@@ -199,43 +207,43 @@ enable_mglru() {
 
 apply_memory_balance() {
     local profile="${1:-balanced}"
-    local swappiness=72
-    local cache_pressure=90
-    local dirty_ratio=16
+    local swappiness=45
+    local cache_pressure=60
+    local dirty_ratio=15
     local dirty_background=4
     local dirty_writeback=1500
     local dirty_expire=3000
     local page_cluster=0
-    local compaction=20
-    local watermark=16
+    local compaction=10
+    local watermark=150
 
     case "$profile" in
         boost)
-            swappiness=68
-            cache_pressure=85
-            dirty_ratio=14
-            dirty_background=4
+            swappiness=40
+            cache_pressure=50
+            dirty_ratio=12
+            dirty_background=3
             dirty_writeback=1200
-            compaction=18
-            watermark=14
+            compaction=5
+            watermark=150
             ;;
         battery)
-            swappiness=90
-            cache_pressure=110
+            swappiness=60
+            cache_pressure=80
             dirty_ratio=10
             dirty_background=3
             dirty_writeback=2000
-            compaction=30
-            watermark=20
+            compaction=20
+            watermark=100
             ;;
         thermal)
-            swappiness=80
-            cache_pressure=100
+            swappiness=50
+            cache_pressure=70
             dirty_ratio=12
             dirty_background=4
             dirty_writeback=1500
-            compaction=25
-            watermark=18
+            compaction=15
+            watermark=120
             ;;
     esac
 
@@ -273,9 +281,11 @@ apply_runtime_props() {
     resetprop -p persist.vendor.mtk.fpsgo.v2.enable 1 2>/dev/null
     resetprop -p persist.vendor.mtk.fpsgo.v3.enable 1 2>/dev/null
     resetprop -p debug.vendor.perf.smart_touch 1 2>/dev/null
+    resetprop -p vendor.boostfwk.frame.decision 2 2>/dev/null
     resetprop -p persist.sys.boot.logcat 0 2>/dev/null
     resetprop -p logd.log_size 64K 2>/dev/null
     resetprop -p persist.logd.size 64K 2>/dev/null
+    apply_display_tuning
 }
 
 clear_stale_props() {

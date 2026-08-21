@@ -1,7 +1,7 @@
 id=careful_optimization
-name=Careful Unified Optimizer v6.5 Balanced ThermalGuard
-version=v6.5
-versionCode=20
-author=Codex
-description=Balanced Android 15 profile for Dimensity 7050. Restores freezer-friendly reclaim, adaptive PPM thermal guard, low-overhead live service, and smooth vendor-aligned behavior without forced 120Hz or zero-latency hacks.
+name=Careful Unified Optimizer v6.6 Smoothness & ThermalGuard
+version=v6.6
+versionCode=21
+author=Codex & Antigravity
+description=Balanced Android 15 profile for Dimensity 7050. Enforces smooth 120Hz display refresh rate retention for social apps (FB/Insta), low-overhead zRAM/memory balance, adaptive PPM thermal guard, and responsive scheduler tuning without reboot.
 updateJson=
