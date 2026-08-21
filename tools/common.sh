@@ -94,7 +94,7 @@ screen_is_on() {
 is_heavy_app() {
     fg_app="$(dumpsys window windows 2>/dev/null | grep -E 'mCurrentFocus|mFocusedApp' | head -1)"
     case "$fg_app" in
-        *instagram*|*facebook*|*youtube*|*reddit*|*tiktok*|*shorts*|*video*|*game*|*unity*|*unreal*)
+        *instagram*|*facebook*|*katana*|*orca*|*youtube*|*morphe*|*vanced*|*revanced*|*reddit*|*tiktok*|*shorts*|*video*|*game*|*unity*|*unreal*|*chrome*|*browser*)
             return 0
             ;;
     esac
@@ -136,6 +136,14 @@ clear_cpu_limits() {
         echo "0 -1" >/proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
         echo "1 -1" >/proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
     fi
+    for i in 0 1 2 3 4 5; do
+        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 980000
+        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq 2000000
+    done
+    for i in 6 7; do
+        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 1040000
+        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq 2600000
+    done
 }
 
 set_cpu_limit() {
@@ -154,11 +162,13 @@ set_system_boost() {
 }
 
 apply_display_tuning() {
+    settings put system power_save_screen_refresh_rate 2 2>/dev/null
     settings put secure oplus_customize_screen_refresh_rate 2 2>/dev/null
     settings put system min_refresh_rate 120.0 2>/dev/null
     settings put system peak_refresh_rate 120.0 2>/dev/null
     settings put system user_refresh_rate 120 2>/dev/null
     settings put global customized_refresh_rate 120 2>/dev/null
+    settings put system oplus_high_performance_mode 1 2>/dev/null
 }
 
 set_schedutil_response() {
@@ -314,6 +324,7 @@ apply_video_boost() {
     set_system_boost 1
     set_schedutil_response boost
     apply_memory_balance boost
+    apply_display_tuning
     write_power_mode "video_boost"
 }
 
@@ -355,6 +366,7 @@ apply_thermal_policy() {
             clear_cpu_limits
             set_schedutil_response balanced
             apply_memory_balance balanced
+            apply_display_tuning
             log_thermal "restored normal thermal limits"
             ;;
     esac
@@ -365,6 +377,7 @@ restore_normal_limits() {
     set_system_boost 0
     set_schedutil_response balanced
     apply_memory_balance balanced
+    apply_display_tuning
     write_power_mode "normal"
 }
 
