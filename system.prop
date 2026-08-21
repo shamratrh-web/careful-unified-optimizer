@@ -1,4 +1,4 @@
-# Careful Unified Optimizer v6.6 Smoothness & ThermalGuard
+# Careful Unified Optimizer v6.7 Native C++ Speed & Fluidity
 # Balanced Android 15 profile for MT6877 / Dimensity 7050
 
 # Android 15 cached app behavior
@@ -9,16 +9,27 @@ ro.config.fha_enabled=true
 
 # Keep display refresh rate smooth without aggressive content downclocking
 debug.sf.use_content_detection_for_refresh_rate=0
+ro.surface_flinger.max_frame_buffer_acquired_buffers=3
 
-# MediaTek vendor stack
+# HWUI & Skia graphics rendering pipeline
+debug.hwui.use_buffer_age=true
+debug.hwui.fps_divisor=-1
+debug.renderengine.backend=skiagl
+debug.hwui.renderer=skiagl
+
+# MediaTek vendor stack & graphics booster
 persist.vendor.mtk.perf_turbo=1
 persist.vendor.mtk.fpsgo.enable=1
 persist.vendor.mtk.fpsgo.v2.enable=1
 persist.vendor.mtk.fpsgo.v3.enable=1
+persist.vendor.mtk.ged.boost_enable=1
+persist.vendor.mtk.ged.smart_boost=1
 debug.vendor.perf.smart_touch=1
 vendor.boostfwk.frame.decision=2
+vendor.boostfwk.scroll.interrupt.touchboost=1
+vendor.boostfwk.scroll.policy.mode=1
 
-# ART / dexopt
+# ART / dexopt native execution
 dalvik.vm.dex2oat-filter=speed-profile
 dalvik.vm.image-dex2oat-filter=speed-profile
 dalvik.vm.dex2oat-threads=4
@@ -40,3 +51,4 @@ persist.logd.size=64K
 # Thermal / battery intent flags
 persist.sys.thermal.scheduling=1
 persist.sys.battery.health.optimization=1
+
