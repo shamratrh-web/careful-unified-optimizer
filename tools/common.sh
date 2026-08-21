@@ -137,11 +137,11 @@ clear_cpu_limits() {
         echo "1 -1" >/proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
     fi
     for i in 0 1 2 3 4 5; do
-        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 980000
+        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 1260000
         write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq 2000000
     done
     for i in 6 7; do
-        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 1040000
+        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 1430000
         write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq 2600000
     done
 }
@@ -162,6 +162,12 @@ set_system_boost() {
 }
 
 apply_display_tuning() {
+    for type in CPU GPU SKIN SOC NPU TPU POWER_AMPLIFIER BATTERY; do
+        cmd thermalservice inject-temperature $type NONE $type 35.0 2>/dev/null
+    done
+    cmd thermalservice inject-temperature SKIN NONE shell_skin 35.0 2>/dev/null
+    cmd thermalservice override-status 0 2>/dev/null
+
     settings put system power_save_screen_refresh_rate 2 2>/dev/null
     settings put secure oplus_customize_screen_refresh_rate 2 2>/dev/null
     settings put system min_refresh_rate 120.0 2>/dev/null
@@ -217,43 +223,43 @@ enable_mglru() {
 
 apply_memory_balance() {
     local profile="${1:-balanced}"
-    local swappiness=45
-    local cache_pressure=60
+    local swappiness=35
+    local cache_pressure=50
     local dirty_ratio=15
     local dirty_background=4
     local dirty_writeback=1500
     local dirty_expire=3000
     local page_cluster=0
     local compaction=10
-    local watermark=150
+    local watermark=200
 
     case "$profile" in
         boost)
-            swappiness=40
-            cache_pressure=50
+            swappiness=30
+            cache_pressure=40
             dirty_ratio=12
             dirty_background=3
             dirty_writeback=1200
             compaction=5
-            watermark=150
+            watermark=200
             ;;
         battery)
-            swappiness=60
-            cache_pressure=80
+            swappiness=50
+            cache_pressure=70
             dirty_ratio=10
             dirty_background=3
             dirty_writeback=2000
             compaction=20
-            watermark=100
+            watermark=150
             ;;
         thermal)
-            swappiness=50
-            cache_pressure=70
+            swappiness=40
+            cache_pressure=60
             dirty_ratio=12
             dirty_background=4
             dirty_writeback=1500
             compaction=15
-            watermark=120
+            watermark=150
             ;;
     esac
 
