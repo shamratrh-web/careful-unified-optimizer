@@ -162,21 +162,48 @@ set_system_boost() {
 }
 
 apply_display_tuning() {
+    # 1. Thermal HAL baseline injection
     for type in CPU GPU SKIN SOC NPU TPU POWER_AMPLIFIER BATTERY; do
         cmd thermalservice inject-temperature $type NONE $type 35.0 2>/dev/null
     done
     cmd thermalservice inject-temperature SKIN NONE shell_skin 35.0 2>/dev/null
     cmd thermalservice override-status 0 2>/dev/null
 
-    settings put system power_save_screen_refresh_rate 2 2>/dev/null
+    # 2. Disable Android 15 display clampers (stops low-power, low-light, and app 60Hz downclocking)
+    device_config put display_manager com.android.server.display.feature.flags.enable_vsync_low_power_vote false 2>/dev/null
+    device_config put display_manager com.android.server.display.feature.flags.enable_vsync_low_light_vote false 2>/dev/null
+    device_config put display_manager com.android.server.display.feature.flags.enable_power_throttling_clamper false 2>/dev/null
+    device_config put display_manager com.android.server.display.feature.flags.ignore_app_preferred_refresh_rate_request true 2>/dev/null
+    device_config put display_manager com.android.server.display.feature.flags.enable_synthetic_60hz_modes false 2>/dev/null
+
+    # 3. MediaTek MT6877 / Dimensity 7050 hardware FPSGO & FBT nodes
+    write_if_exists /sys/kernel/fpsgo/common/fpsgo_enable 1
+    write_if_exists /sys/kernel/fpsgo/fbt/boost_ta 1
+    write_if_exists /sys/kernel/fpsgo/fbt/boost_VIP 1
+    write_if_exists /sys/kernel/fpsgo/fbt/rescue_enable 1
+    write_if_exists /sys/kernel/fpsgo/fbt/ultra_rescue 1
+    write_if_exists /sys/kernel/fpsgo/fbt/engine_cooler_enable 0
+    write_if_exists /sys/kernel/fpsgo/composer/control_hwui 1
+    write_if_exists /sys/kernel/fpsgo/fbt/limit_cfreq 0
+    write_if_exists /sys/kernel/fpsgo/fbt/limit_rfreq 0
+
+    # 4. ColorOS / Realme UI permanent 120Hz locks
     settings put secure oplus_customize_screen_refresh_rate 2 2>/dev/null
+    settings put system oplus_customize_screen_refresh_rate 2 2>/dev/null
     settings put system min_refresh_rate 120.0 2>/dev/null
     settings put system peak_refresh_rate 120.0 2>/dev/null
+    settings put global min_refresh_rate 120.0 2>/dev/null
+    settings put global peak_refresh_rate 120.0 2>/dev/null
+    settings put system power_save_screen_refresh_rate 2 2>/dev/null
     settings put system user_refresh_rate 120 2>/dev/null
     settings put global customized_refresh_rate 120 2>/dev/null
     settings put system oplus_high_performance_mode 1 2>/dev/null
+    settings put system sys_force_60Hz 0 2>/dev/null
+    settings put secure sys_force_60Hz 0 2>/dev/null
+    settings put global sys_force_60Hz 0 2>/dev/null
+    settings put secure match_content_frame_rate_user_preference 0 2>/dev/null
 
-    # Fluid native animation physics and zero lag
+    # 5. Fluid native animation physics
     settings put global window_animation_scale 1.0 2>/dev/null
     settings put global transition_animation_scale 1.0 2>/dev/null
     settings put global animator_duration_scale 1.0 2>/dev/null
