@@ -137,11 +137,11 @@ clear_cpu_limits() {
         echo "1 -1" >/proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
     fi
     for i in 0 1 2 3 4 5; do
-        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 1260000
+        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 500000
         write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq 2000000
     done
     for i in 6 7; do
-        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 1430000
+        write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_min_freq 650000
         write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq 2600000
     done
 }
@@ -175,6 +175,14 @@ apply_display_tuning() {
     settings put system user_refresh_rate 120 2>/dev/null
     settings put global customized_refresh_rate 120 2>/dev/null
     settings put system oplus_high_performance_mode 1 2>/dev/null
+
+    # Fluid native animation physics and zero lag
+    settings put global window_animation_scale 1.0 2>/dev/null
+    settings put global transition_animation_scale 1.0 2>/dev/null
+    settings put global animator_duration_scale 1.0 2>/dev/null
+    settings put system setting_app_startup_anim_speed "fast" 2>/dev/null
+    settings put system is_oplus_launcher_zoom 0 2>/dev/null
+    settings put secure is_oplus_launcher_zoom 0 2>/dev/null
 }
 
 set_schedutil_response() {
