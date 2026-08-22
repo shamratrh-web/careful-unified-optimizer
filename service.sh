@@ -79,6 +79,9 @@ fi
         if [ -f "$MODDIR/smart_balance.sh" ]; then
             sh "$MODDIR/smart_balance.sh" auto >/dev/null 2>&1
         fi
+        if [ -f "$MODDIR/tools/nightly_optimizer.sh" ]; then
+            sh "$MODDIR/tools/nightly_optimizer.sh" nightly >/dev/null 2>&1 &
+        fi
         sleep "$(choose_monitor_interval)"
     done
 ) &

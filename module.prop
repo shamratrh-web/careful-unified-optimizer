@@ -1,8 +1,8 @@
 id=careful_optimization
-name=Careful Unified Optimizer v6.8 Ultimate Fluidity & KernelGuard
-version=v6.8
-versionCode=23
+name=Careful Unified Optimizer v6.9 Ultimate Fluidity & NightlyGuard
+version=v6.9
+versionCode=24
 author=Codex & Antigravity
-description=Ultimate Android 15 profile for Dimensity 7050. Full-system AOT native AArch64 machine-code execution for all apps, zero-drain 50µs schedutil touch booster, permanent 120Hz display lock, hardware FPSGO/FBT accelerators, automated TrickyStore IPC pruning, and screen-off ZRAM compaction.
+description=Ultimate Android 15 profile for Dimensity 7050. Automated midnight background app optimizer while charging, zero-drain 50µs schedutil touch booster, permanent 120Hz display lock, hardware FPSGO/FBT accelerators, TrickyStore IPC pruning, and screen-off ZRAM compaction.
 updateJson=
 
