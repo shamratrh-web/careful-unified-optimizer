@@ -149,8 +149,14 @@ clear_cpu_limits() {
 set_cpu_limit() {
     local cluster="$1"
     local max_khz="$2"
-    if [ -w /proc/ppm/policy/userlimit_max_cpu_freq ]; then
-        echo "$cluster $max_khz" >/proc/ppm/policy/userlimit_max_cpu_freq 2>/dev/null
+    if [ "$cluster" = "0" ]; then
+        for i in 0 1 2 3 4 5; do
+            write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq "$max_khz"
+        done
+    elif [ "$cluster" = "1" ]; then
+        for i in 6 7; do
+            write_if_exists /sys/devices/system/cpu/cpu$i/cpufreq/scaling_max_freq "$max_khz"
+        done
     fi
 }
 
@@ -371,10 +377,11 @@ apply_video_boost() {
 
 apply_battery_guard() {
     set_system_boost 0
-    set_cpu_limit 0 1200000
-    set_cpu_limit 1 1400000
+    set_cpu_limit 0 1300000
+    set_cpu_limit 1 1600000
     set_schedutil_response battery
     apply_memory_balance battery
+    write_if_exists /sys/block/zram0/compact 1
     write_power_mode "screen_off"
 }
 

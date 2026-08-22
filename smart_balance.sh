@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Careful Unified Optimizer v6.6 Balanced ThermalGuard live balance.
+# Careful Unified Optimizer v6.8 Ultimate Fluidity & KernelGuard live balance.
 
 LOG_TAG="CarefulThermalGuard"
 MODDIR="${0%/*}"
@@ -49,5 +49,5 @@ fi
 
 save_thermal_snapshot
 refresh_thermal_cache
-log_msg "v6.6 mode=$target_mode cpu=${CAREFUL_CPU_TEMP} shell=${CAREFUL_SHELL_TEMP} battery=${CAREFUL_BATTERY_TEMP}"
+log_msg "v6.8 mode=$target_mode cpu=${CAREFUL_CPU_TEMP} shell=${CAREFUL_SHELL_TEMP} battery=${CAREFUL_BATTERY_TEMP}"
 exit 0
